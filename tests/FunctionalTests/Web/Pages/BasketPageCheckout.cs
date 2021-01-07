@@ -66,5 +66,42 @@ namespace Microsoft.eShopWeb.FunctionalTests.WebRazorPages
             var postResponse2 = await Client.PostAsync("/Basket/Checkout", formContent);
             Assert.Contains("/Identity/Account/Login", postResponse2.RequestMessage.RequestUri.ToString());
         }
+
+        [Fact]
+        public async Task MyTest()
+        {
+            // Arrange & Act
+
+            // Load Home Page
+            var response = await Client.GetAsync("/");
+            response.EnsureSuccessStatusCode();
+            var stringResponse1 = await response.Content.ReadAsStringAsync();
+
+            string token = GetRequestVerificationToken(stringResponse1);
+
+            // Add Item to Cart
+            List<KeyValuePair<string, string>> keyValues = new List<KeyValuePair<string, string>>();
+            keyValues.Add(new KeyValuePair<string, string>("id", "2"));
+            keyValues.Add(new KeyValuePair<string, string>("name", "shirt"));
+
+            keyValues.Add(new KeyValuePair<string, string>("price", "19.49"));
+            keyValues.Add(new KeyValuePair<string, string>("__RequestVerificationToken", token));
+
+            var formContent = new FormUrlEncodedContent(keyValues);
+
+            var postResponse = await Client.PostAsync("/basket/index", formContent);
+            postResponse.EnsureSuccessStatusCode();
+            var stringResponse = await postResponse.Content.ReadAsStringAsync();
+
+            // Assert
+            Assert.Contains(".NET Black &amp; White Mug", stringResponse);
+
+            keyValues.Clear();
+            keyValues.Add(new KeyValuePair<string, string>("__RequestVerificationToken", token));
+
+            formContent = new FormUrlEncodedContent(keyValues);
+            var postResponse2 = await Client.PostAsync("/Basket/Checkout", formContent);
+            Assert.Contains("/Identity/Account/Login", postResponse2.RequestMessage.RequestUri.ToString());
+        }
     }
 }
